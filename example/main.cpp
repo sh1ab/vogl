@@ -29,7 +29,7 @@ void do_with_errors(HWND p, uint32_t error) {
     }
 }
 
-vogl::var::var<uint32_t, 512, 1024, 512> v;
+vogl::var::var<uint32_t, 1024, 1024, 1024> v;
 float ang[3];
 float pos[3];
 float pos_speed = 80;
