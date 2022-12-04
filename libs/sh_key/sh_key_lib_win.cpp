@@ -7,12 +7,6 @@ namespace shks {
 
 	POINT pt = { 0, 0 };
 
-	void get_cur_pos(POINT& pptt) {
-		GetCursorPos(&pptt);
-		pptt.x = pptt.x;
-		pptt.y = pptt.y;
-	}
-
 	void update() {
 		for (uint16_t i(256); i--;) {
 			m_keyNewState[i] = GetAsyncKeyState(i);
@@ -31,7 +25,6 @@ namespace shks {
 
 			m_keyOldState[i] = m_keyNewState[i];
 		}
-		get_cur_pos(pt);
 	}
 
 	int32_t get_x() { return pt.x; }
@@ -41,6 +34,10 @@ namespace shks {
 
 	void set_cursor(int32_t x, int32_t y) {
 		SetCursorPos(x, y);
-		get_cur_pos(pt);
+		mouse_update();
+	}
+	void mouse_update() {
+		GetCursorPos(&pt);
+
 	}
 };

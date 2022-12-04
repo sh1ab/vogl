@@ -17,6 +17,7 @@ namespace shks {
 	k_state get_key(uint32_t id);
 	void update();
 	void set_cursor(int32_t x, int32_t y);
+	void mouse_update();
 };
 
 #endif //_SH_KEY_H_

@@ -115,7 +115,7 @@ void main() {
         mod_mat_y_x, mod_mat_y_y, mod_mat_y_z,
         mod_mat_z_x, mod_mat_z_y, mod_mat_z_z));
 
-	vec3 rd = normalize(vec3(2*gl_FragCoord.xy-vec2(w, h), min(w, h)));
+	vec3 rd = normalize(vec3(2*gl_FragCoord.xy-vec2(w, h), h));
 
 	rd.yz = rot(rd.yz, -ang_x);
 	rd.zx = rot(rd.zx, -ang_y);
@@ -124,8 +124,12 @@ void main() {
     rd = inv_mod_mat * rd;
 
     float inv_l = length(rd);
-    if (inv_l < 0.0001)
-        discard;
+    if (inv_l < 0.0001) {
+        gl_FragDepth = 0.1f; 
+        frag_color = vec4(1, 1, 1, 1);
+        return;
+		discard;
+    }
     inv_l = 1.0 / inv_l;
     rd = rd*inv_l;
 

@@ -29,7 +29,7 @@ void do_with_errors(HWND p, uint32_t error) {
     }
 }
 
-vogl::var::var<uint32_t, 1024, 512, 1024> v;
+vogl::var::var<uint32_t, 512, 1024, 512> v;
 float ang[3];
 float pos[3];
 float pos_speed = 80;
@@ -50,18 +50,21 @@ struct gm : public game {
         vogl::var::big_var::ubo::set_mod_mat_index(2, 0, 0);vogl::var::big_var::ubo::set_mod_mat_index(2, 1, 0);vogl::var::big_var::ubo::set_mod_mat_index(2, 2, 1);
         
         vogl::var::big_var::ubo::set_cam_near(0.1f);
-        vogl::var::big_var::ubo::set_cam_width(512);
-        vogl::var::big_var::ubo::set_cam_height(512);
+        vogl::var::big_var::ubo::set_cam_width(screen_w);
+        vogl::var::big_var::ubo::set_cam_height(screen_h);
 
         pos[0] = 0; pos[1] = 0; pos[2] = 0;
         pos[0] = 0; ang[1] = -0.4f; ang[2] = 0;
 
         vogl::var::big_var::ubo::load();
-        //shks::set_cursor(100, 100);
 
         return G::OK;
     }
+    float dt = 0;
     uint32_t loop(float dt) {
+        if(shks::get_key(VK_MENU).held)SetCursor(LoadCursor(NULL, IDC_ARROW));
+        else SetCursor(NULL);
+        this->dt = dt;
         if (shks::get_key(VK_ESCAPE).pressed)
             return G::NICE_END;
 
@@ -81,20 +84,6 @@ struct gm : public game {
         pos[0] += v[0]*dt*pos_speed;
         pos[1] += v[1]*dt*pos_speed;
         pos[2] += v[2]*dt*pos_speed;
-
-        float a[3] = {0, 0, 0};
-        //static float new_x = shks::get_x();
-        //static float new_y = shks::get_y();
-        //new_x = shks::get_x();
-        //new_y = shks::get_y();
-        //a[1] = 100 - new_x;
-        a[1] = shks::get_key(VK_LEFT).held - shks::get_key(VK_RIGHT).held;
-        //a[0] = 100 - new_y;
-        a[0] = shks::get_key(VK_UP).held - shks::get_key(VK_DOWN).held;
-        //shks::set_cursor(100, 100);
-        ang[0] += a[0]*dt*mouse_speed;
-        ang[1] += a[1]*dt*mouse_speed;
-        ang[2] += a[2]*dt*mouse_speed;
         
         if (ang[0] < -1.570796f) ang[0] = -1.570796f;
         if (ang[0] >  1.570796f) ang[0] =  1.570796f;
@@ -105,13 +94,30 @@ struct gm : public game {
 
         return G::OK;
     }
+    uint32_t touch_move(int32_t to_x, int32_t to_y, int32_t from_x, int32_t from_y) {
+        float a[3] = {0, 0, 0};
+        a[1] = from_x - to_x;
+        a[0] = from_y - to_y;
+        ang[0] += a[0]*mouse_speed * dt;
+        ang[1] += a[1]*mouse_speed * dt;
+        ang[2] += a[2]*mouse_speed * dt;
+        return G::OK;
+    }
+    uint32_t resz(uint32_t w, uint32_t h) {
+        screen_w = w;
+        screen_h = h;
+        glViewport(0, 0, screen_w, screen_h);
+        vogl::var::big_var::ubo::set_cam_width(screen_w);
+        vogl::var::big_var::ubo::set_cam_height(screen_h);
+        vogl::var::big_var::ubo::load();
+        return G::OK;
+    }
     uint32_t draw() {
         wgl.start_draw();
         glClearColor(0.01f, 0.01f, 0.01f, 1);
         vogl::var::big_var::ubo::set_cam_pos(pos[0], pos[1], pos[2]);
         vogl::var::big_var::ubo::set_cam_ang(ang[0], ang[1], ang[2]);
         vogl::var::big_var::ubo::load();
-        //vogl::var::big_var::set_var(&v);
         vogl::var::big_var::draw();
         wgl.end_draw();
         return G::OK;
@@ -141,6 +147,22 @@ LRESULT win_proc(HWND win, UINT msg, WPARAM wpr, LPARAM lpr) {
                         do_with_errors(win, gm.stop());
                     } break;
                 };
+            } break;
+            case WM_SIZE: {
+                RECT wRect; GetClientRect(win, &wRect);
+                do_with_errors(win, gm.resz(wRect.right - wRect.left, wRect.bottom - wRect.top));
+            }break;
+            case WM_MOUSEMOVE: {
+                if(!shks::get_key(VK_MENU).held) {
+                    static int32_t prev_x = 0, prev_y = 0;
+                    POINT pt;
+                    GetCursorPos(&pt);
+                    RECT wRect; GetWindowRect(win, &wRect);
+                    prev_x = (wRect.left+wRect.right)>>1;
+                    prev_y = (wRect.bottom+wRect.top)>>1;
+                    do_with_errors(win, gm.touch_move(pt.x, pt.y, prev_x, prev_y));
+                    SetCursorPos(prev_x, prev_y);
+                }
             } break;
             default: {
                 return DefWindowProc(win, msg, wpr, lpr);
@@ -173,20 +195,19 @@ HWND createHWND(LPCWSTR win_name, uint32_t w, uint32_t h) {
         c.hInstance, NULL
     );
 	RECT wRect, cRect;
-	
 	GetWindowRect(win, &wRect);
 	GetClientRect(win, &cRect);
 	
-	wRect.right  += w - cRect.right - wRect.left;
-	wRect.bottom += h - cRect.bottom - wRect.top;
-	
+	wRect.right  = (wRect.right - wRect.left) - cRect.right  + w;
+	wRect.bottom = (wRect.bottom - wRect.top) - cRect.bottom + h;
+
 	MoveWindow(win, wRect.left, wRect.top, wRect.right, wRect.bottom, FALSE);
     return win;
 }
 
 int32_t main() {
     std::cout << "Hello world!\n";
-    HWND p = createHWND(L"Hello world!", 1080, 1920);
+    HWND p = createHWND(L"Hello world!", gm.screen_w, gm.screen_h);
 	SetWindowLongPtr(p, GWLP_USERDATA, (LONG_PTR)(&gm));
     wgl.setHWND(p);
     wgl.init();
@@ -209,7 +230,7 @@ int32_t main() {
 		std::chrono::duration<float> dTime = new_time - old_time;
         dt = dTime.count();
         old_time = new_time;
-        std::wstring s = L" ms to frame: " + std::to_wstring(dt) + L" mspf, speed: " + std::to_wstring(1000.0f/dt) + L" fps ";
+        std::wstring s = L" time to frame: " + std::to_wstring(dt) + L"tpf, speed: " + std::to_wstring(1.0f/dt) + L" fps ";
         TextOutW(GetDC(p), 0, 0, s.c_str(), s.length());
         do_with_errors(p, gm.loop(dt));
         RedrawWindow(p, nullptr, nullptr, RDW_INTERNALPAINT);

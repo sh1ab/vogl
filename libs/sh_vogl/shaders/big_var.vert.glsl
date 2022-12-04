@@ -78,9 +78,9 @@ const uvec3 vertices[] = {
 	uvec3(1, 0, 1)
 };
 
-#define W size_x
-#define H size_y
-#define D size_z
+#define _W size_x
+#define _H size_y
+#define _D size_z
 
 vec2 rot(in vec2 inp, in float alpha) {
     return vec2(
@@ -102,7 +102,7 @@ void main() {
 		mod_mat_z_x, mod_mat_z_y, mod_mat_z_z);
 
 	vec3 model;
-	model = vertices[gl_VertexID]*uvec3(W, H, D);
+	model = vertices[gl_VertexID]*uvec3(_W, _H, _D);
 
 	model = mod_mat * model + mod_pos;
 
@@ -112,5 +112,5 @@ void main() {
 	model.zx = rot(model.zx, ang_y);
 	model.yz = rot(model.yz, ang_x);
 
-	gl_Position = vec4(w*model.x/h, model.y, 0, model.z);
+	gl_Position = vec4(h*model.x, w*model.y, 0, w*model.z);
 }
