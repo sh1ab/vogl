@@ -1,13 +1,21 @@
 #version 440 core
 
 layout(std140, binding = 3) uniform inputs{
+	uint atlas_size_x;
+	uint atlas_size_y;
+	uint atlas_size_z;
+
+    uint tex_x;
+    uint tex_y;
+    uint tex_z;
+    
+    uint tex_size_x;
+    uint tex_size_y;
+    uint tex_size_z;
+
 	float n;
 	float w;
 	float h;
-
-	uint size_x;
-	uint size_y;
-	uint size_z;
 
 	float pos_x;
 	float pos_y;
@@ -78,9 +86,9 @@ const uvec3 vertices[] = {
 	uvec3(1, 0, 1)
 };
 
-#define _W size_x
-#define _H size_y
-#define _D size_z
+#define _W tex_size_x
+#define _H tex_size_y
+#define _D tex_size_z
 
 vec2 rot(in vec2 inp, in float alpha) {
     return vec2(

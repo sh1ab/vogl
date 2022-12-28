@@ -1,7 +1,7 @@
 #include "var.hpp"
 
 
-namespace vogl {
+namespace sh_vogl {
     namespace var {
 
     };

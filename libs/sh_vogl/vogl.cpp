@@ -1,5 +1,5 @@
 #include "vogl.hpp"
 
-namespace vogl {
+namespace sh_vogl {
     
 };

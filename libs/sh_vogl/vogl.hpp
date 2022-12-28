@@ -1,7 +1,7 @@
 #ifndef _VOGL_HPP_
 #define _VOGL_HPP_
 
-namespace vogl {
+namespace sh_vogl {
     
 };
 

@@ -14,7 +14,9 @@ add_library(${PROJECT_NAME}
     STATIC 
         "vogl.hpp"
         "vogl.cpp"
-        "mat3x3.h"
+        "math/mat3.hpp"
+        "math/vec3.hpp"
+        "math/R3_actions.hpp"
         
         "var/var.hpp"
         "var/var.cpp"

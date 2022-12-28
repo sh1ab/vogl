@@ -4,23 +4,25 @@
 #include <ubo.hpp>
 #include "shaders/shaders.hpp"
 
-namespace vogl {
+namespace sh_vogl {
     namespace var {
         namespace big_var {
             namespace ubo {
                 struct __ubo_struct {
+                    uint32_t atlas_size[3];
+                    uint32_t tex[3];
+                    uint32_t tex_size[3];
+                    
                     float n;
                     float w;
                     float h;
-
-                    uint32_t size[3];
 
                     float pos[3];
                     float ang[3];
 
                     float mod_pos[3];
 
-                    fmat3x3 mod_mat;
+                    math::R3::mat<float> mod_mat;
                 };
                 sh_ogl::ubo<GL_DYNAMIC_DRAW, 3, struct __ubo_struct> ubo_buf;
 
@@ -29,6 +31,17 @@ namespace vogl {
                     ubo_buf.load_ubo();
                 }
                 void load() { ubo_buf.load_ubo(); }
+
+                void set_tex(uint32_t x0, uint32_t x1, uint32_t x2) {
+                    ubo_buf.buf.tex[0] = x0;
+                    ubo_buf.buf.tex[1] = x1;
+                    ubo_buf.buf.tex[2] = x2;
+                }
+                void set_tex_size(uint32_t x0, uint32_t x1, uint32_t x2) {
+                    ubo_buf.buf.tex_size[0] = x0;
+                    ubo_buf.buf.tex_size[1] = x1;
+                    ubo_buf.buf.tex_size[2] = x2;
+                }
 
                 void set_cam_near(float near) {ubo_buf.buf.n = near;}
                 void set_cam_width(float width) {ubo_buf.buf.w = width;}
@@ -73,8 +86,8 @@ namespace vogl {
                 void set_mod_pos_index(uint32_t i, float x) { ubo_buf.buf.mod_pos[i] = x; }
                 void add_mod_pos_index(uint32_t i, float x) { ubo_buf.buf.mod_pos[i] += x; }
 
-                void set_mod_mat(fmat3x3 mat) { ubo_buf.buf.mod_mat = mat; }
-                void set_mod_mat(fmat3x3* mat) { ubo_buf.buf.mod_mat = *mat; }
+                void set_mod_mat(math::R3::mat<float> mat) { ubo_buf.buf.mod_mat = mat; }
+                void set_mod_mat(math::R3::mat<float>* mat) { ubo_buf.buf.mod_mat = *mat; }
                 void set_mod_mat_index(uint32_t i, uint32_t j, float a_ij) { ubo_buf.buf.mod_mat(i, j) = a_ij; }
                 void add_mod_mat_index(uint32_t i, uint32_t j, float a_ij) { ubo_buf.buf.mod_mat(i, j) = a_ij; }
 
@@ -86,7 +99,7 @@ namespace vogl {
                 float get_cam_ang_index(uint32_t i) { return ubo_buf.buf.ang[i]; }
                 float get_mod_pos_index(uint32_t i) { return ubo_buf.buf.mod_pos[i]; }
 
-                fmat3x3 get_mod_mat() { return ubo_buf.buf.mod_mat; }
+                math::R3::mat<float> get_mod_mat() { return ubo_buf.buf.mod_mat; }
                 float get_mod_mat_index(uint32_t i, uint32_t j) { return ubo_buf.buf.mod_mat(i, j); }
             };
             sh_ogl::ppl_prog pr;
@@ -116,15 +129,23 @@ namespace vogl {
 
                 ubo::init();
             }
-            void set_var(uint32_t ox, uint32_t oy, uint32_t oz, size_t type_size, void* data) {
-                ubo::ubo_buf.buf.size[0] = ox;
-                ubo::ubo_buf.buf.size[1] = oy;
-                ubo::ubo_buf.buf.size[2] = oz;
+            void set_var(uint32_t ox, uint32_t oy, uint32_t oz, void* data) {
+                ubo::ubo_buf.buf.atlas_size[0] = ox;
+                ubo::ubo_buf.buf.atlas_size[1] = oy;
+                ubo::ubo_buf.buf.atlas_size[2] = oz;
                 
                 ubo::ubo_buf.load_ubo();
 
                 glBindTexture(GL_TEXTURE_3D, texture);
                 glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, ox, oy, oz, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            }
+            void set_subvar(uint32_t x, uint32_t y, uint32_t z, uint32_t ox, uint32_t oy, uint32_t oz, void* data) {                
+                glBindTexture(GL_TEXTURE_3D, texture);
+                glTexSubImage3D(GL_TEXTURE_3D, 0, x, y, z, ox, oy, oz, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            }
+            void set_vox(uint32_t x, uint32_t y, uint32_t z, void* data) {                
+                glBindTexture(GL_TEXTURE_3D, texture);
+                glTexSubImage3D(GL_TEXTURE_3D, 0, x, y, z, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, data);
             }
             void draw() {
                 pr.bind();

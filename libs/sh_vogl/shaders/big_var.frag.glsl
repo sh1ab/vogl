@@ -1,13 +1,21 @@
 #version 440 core
 
 layout(std140, binding = 3) uniform inputs{
+	uint atlas_size_x;
+	uint atlas_size_y;
+	uint atlas_size_z;
+
+    uint tex_x;
+    uint tex_y;
+    uint tex_z;
+    
+    uint tex_size_x;
+    uint tex_size_y;
+    uint tex_size_z;
+
 	float n;
 	float w;
 	float h;
-
-	uint size_x;
-	uint size_y;
-	uint size_z;
 
 	float pos_x;
 	float pos_y;
@@ -62,10 +70,10 @@ struct ray_hit {
 
 ivec3 ppp(vec3 v, vec3 w) { return ivec3(v.x <= 0 && w.x <= 0, v.y <= 0 && w.y <= 0, v.z <= 0 && w.z <= 0); }
 
-#define W size_x
-#define H size_y
-#define D size_z
-#define voxel(__x, __y, __z) texture(tex, vec3((__x)/float(W), (__y)/float(H), (__z)/float(D)))
+#define W tex_size_x
+#define H tex_size_y
+#define D tex_size_z
+#define voxel(__x, __y, __z) texture(tex, vec3((tex_x + (__x))/float(atlas_size_x), (tex_y + (__y))/float(atlas_size_y), (tex_z + (__z))/float(atlas_size_z)))
 bool cast_ray(in vec3 ro, in vec3 rd, out ray_hit hit) {
     vec3 ro_0 = ro;
 
