@@ -50,16 +50,16 @@ namespace sh_vogl {
                 float get_mod_mat_index(uint32_t i, uint32_t j);
             };
             void init();
-            template<typename vox_type, const uint32_t _ox, const uint32_t _oy, const uint32_t _oz>
+            void set_var(uint32_t ox, uint32_t oy, uint32_t oz, void* data);
+            template<typename vox_type, uint32_t _ox, uint32_t _oy, uint32_t _oz>
             void set_var(var<vox_type, _ox, _oy, _oz> *v) {
                 set_var(_ox, _oy, _oz, v->vox_ids);
             }
-            void set_var(uint32_t ox, uint32_t oy, uint32_t oz, void* data);
+            void set_subvar(uint32_t x, uint32_t y, uint32_t z, uint32_t ox, uint32_t oy, uint32_t oz, void* data);
             template<typename vox_type, const uint32_t _ox, const uint32_t _oy, const uint32_t _oz>
             void set_subvar(uint32_t x, uint32_t y, uint32_t z, var<vox_type, _ox, _oy, _oz> *v) {
                 set_subvar(x, y, z, _ox, _oy, _oz, v->vox_ids);
             }
-            void set_subvar(uint32_t x, uint32_t y, uint32_t z, uint32_t ox, uint32_t oy, uint32_t oz, void* data);
             void set_vox(uint32_t x, uint32_t y, uint32_t z, void* data);
             void draw();
             void stop();

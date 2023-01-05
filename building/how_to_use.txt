@@ -1,0 +1,13 @@
+first of all:
+install cmake
+install ninja, mingw64, gcc and g++ in msys2
+
+in "if_not_build.bat" edit "C:\msys64\mingw64\bin" to bin of mingw
+in "if_you_ended.bat" edit "C:\msys64\mingw64\bin" to bin of mingw
+in "build.bat" edit "C:\msys64\ucrt64\bin\gcc.exe" to path of gcc.exe
+in "build.bat" edit "C:\msys64\ucrt64\bin\g++.exe" to path of g++.exe
+
+building:
+starting of "build.bat" and it create the exe file of your application
+if starting of "build.bat" do nothing then start "if_not_build.bat"
+if you ended work then start "if_you_ended.bat"

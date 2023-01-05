@@ -9,6 +9,7 @@
 #include <var/big_var/big_var_renderer.hpp>
 #include <chrono>
 #include <string>
+#include <cmath>
 #include <thread>
 
 sh_ogl::gl wgl;
@@ -199,6 +200,7 @@ LRESULT win_proc(HWND win, UINT msg, WPARAM wpr, LPARAM lpr) {
         }
     else
         return DefWindowProc(win, msg, wpr, lpr);
+    return 0;
 }
 
 HWND createHWND(LPCWSTR win_name, uint32_t w, uint32_t h) {

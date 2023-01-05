@@ -2,11 +2,12 @@
 #define _VAR_HPP_
 
 #include <cinttypes>
+#include <cstdlib>
 
 namespace sh_vogl {
     namespace var {
         
-        template<typename vox_type, const uint32_t _ox, const uint32_t _oy, const uint32_t _oz>
+        template<typename vox_type, uint32_t _ox, uint32_t _oy, uint32_t _oz>
         class var {
         public:
             vox_type* vox_ids;
@@ -25,7 +26,7 @@ namespace sh_vogl {
             }
             vox_type get(const uint32_t& x, const uint32_t& y, const uint32_t& z) const {
                 return vox_ids[z + _oz*(y + _oy*x)];
-            }
+            }/*
         private:
             vox_type* __get(const uint32_t& x, const uint32_t& y, const uint32_t& z) const {
                 return vox_ids + (z + _oz*(y + _oy*x));
@@ -104,7 +105,7 @@ namespace sh_vogl {
                 }
 
                 return false;
-            }
+            }*/
             void finit() {
                 free(vox_ids);
             }
