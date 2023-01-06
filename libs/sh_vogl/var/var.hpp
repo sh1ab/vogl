@@ -2,6 +2,7 @@
 #define _VAR_HPP_
 
 #include <cinttypes>
+#include <cmath>
 #include <cstdlib>
 
 namespace sh_vogl {
@@ -26,25 +27,28 @@ namespace sh_vogl {
             }
             vox_type get(const uint32_t& x, const uint32_t& y, const uint32_t& z) const {
                 return vox_ids[z + _oz*(y + _oy*x)];
-            }/*
+            }
         private:
             vox_type* __get(const uint32_t& x, const uint32_t& y, const uint32_t& z) const {
                 return vox_ids + (z + _oz*(y + _oy*x));
             }
+            #define __max__(a, b) (((a)>(b))?(a):(b))
             float par_intersect(float rox, float roy, float roz, float inv_rdx, float inv_rdy, float inv_rdz, float x, float y, float z) {
                 rox = inv_rdx * ((inv_rdx < 0) * x - rox);
                 roy = inv_rdy * ((inv_rdy < 0) * y - roy);
                 roz = inv_rdz * ((inv_rdz < 0) * z - roz);
-                return max(max(rox, roy), max(roz, 0));
+                return __max__(__max__(rox, roy), __max__(roz, 0));
             }
             float cube_intersect(float rox, float roy, float roz, float inv_rdx, float inv_rdy, float inv_rdz) {
                 rox = inv_rdx * ((inv_rdx < 0) - rox);
                 roy = inv_rdy * ((inv_rdy < 0) - roy);
                 roz = inv_rdz * ((inv_rdz < 0) - roz);
-                return max(max(rox, roy), max(roz, 0));
+                return __max__(__max__(rox, roy), __max__(roz, 0));
             }
+            #undef __max__
             bool ppp(float v, float w) {return v <= 0 && w <= 0;}
         public:
+        
             bool cast_ray(
                 vox_type* v,    float* l,                                       float* normx,   float* normy,   float* normz, 
                 float* rox,     float* roy,     float* roz,                     float rdx,      float rdy,      float rdz, 
@@ -92,20 +96,20 @@ namespace sh_vogl {
                     *normx = stepx * ppp(tmaxx - tmaxy, tmaxx - tmaxz);
                     *normy = stepy* ppp(tmaxy - tmaxz, tmaxy - tmaxx);
                     *normz = stepz * ppp(tmaxz - tmaxx, tmaxz - tmaxy);
-                    vox_posx -= normx;
-                    vox_posy -= normy;
-                    vox_posz -= normz;
+                    vox_posx -= (*normx);
+                    vox_posy -= (*normy);
+                    vox_posz -= (*normz);
 
                     if (vox_posx < 0 || vox_posx >= sx || vox_posy < 0 || vox_posy >= sy || vox_posz < 0 || vox_posz >= sz)
                         return false;
 
-                    tmaxx -= inv_rdx * normx;
-                    tmaxy -= inv_rdy * normy;
-                    tmaxz -= inv_rdz * normz;
+                    tmaxx -= inv_rdx * (*normx);
+                    tmaxy -= inv_rdy * (*normy);
+                    tmaxz -= inv_rdz * (*normz);
                 }
 
                 return false;
-            }*/
+            }
             void finit() {
                 free(vox_ids);
             }

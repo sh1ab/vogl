@@ -3,24 +3,25 @@
 #include <ogl.hpp>
 #include <ubo.hpp>
 #include "shaders/shaders.hpp"
+#include "../../math/vec3.hpp"
 
 namespace sh_vogl {
     namespace var {
         namespace big_var {
             namespace ubo {
                 struct __ubo_struct {
-                    uint32_t atlas_size[3];
-                    uint32_t tex[3];
-                    uint32_t tex_size[3];
+                    math::R3::vec<uint32_t> atlas_size;
+                    math::R3::vec<uint32_t> tex;
+                    math::R3::vec<uint32_t> tex_size;
                     
                     float n;
                     float w;
                     float h;
 
-                    float pos[3];
-                    float ang[3];
+                    math::R3::vec<float> pos;
+                    math::R3::vec<float> ang;
 
-                    float mod_pos[3];
+                    math::R3::vec<float> mod_pos;
 
                     math::R3::mat<float> mod_mat;
                 };
@@ -32,6 +33,10 @@ namespace sh_vogl {
                 }
                 void load() { ubo_buf.load_ubo(); }
 
+                void set_tex(math::R3::vec<uint32_t>  v) { ubo_buf.buf.tex =  v; }
+                void set_tex(math::R3::vec<uint32_t>* v) { ubo_buf.buf.tex = *v; }
+                void set_tex_size(math::R3::vec<uint32_t>  v) { ubo_buf.buf.tex_size =  v; }
+                void set_tex_size(math::R3::vec<uint32_t>* v) { ubo_buf.buf.tex_size = *v; }
                 void set_tex(uint32_t x0, uint32_t x1, uint32_t x2) {
                     ubo_buf.buf.tex[0] = x0;
                     ubo_buf.buf.tex[1] = x1;
