@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cinttypes>
+#include <iostream>
 
 namespace sh_vogl {
 	namespace math {
@@ -55,7 +56,10 @@ namespace sh_vogl {
 				mat3<T> invert() {
 					mat3<T> m;
 					float inv_det = det(*this);
-					assert(inv_det*inv_det*1000000 > 0.00001f);
+					if (inv_det*inv_det*1000000 < 0.00001f) {
+						std::cout << "\nno, peeeen\n";
+						return m;
+					}
 					inv_det = 1.0f / inv_det;
 
 					m(0, 0) = (operator()(1, 1) * operator()(2, 2) - operator()(2, 1) * operator()(1, 2)) * inv_det;

@@ -19,7 +19,6 @@ add_library(${PROJECT_NAME}
         "math/R3_actions.hpp"
         
         "var/var.hpp"
-        "var/var.cpp"
 
         "var/big_var/big_var_renderer.hpp"
         "var/big_var/big_var_renderer.cpp"

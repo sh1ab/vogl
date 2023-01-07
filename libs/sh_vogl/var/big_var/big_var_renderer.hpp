@@ -16,29 +16,23 @@ namespace sh_vogl {
                 void set_tex_size(math::R3::vec<uint32_t>  v);
                 void set_tex_size(math::R3::vec<uint32_t>* v);
 
-                void set_cam_near(float near);
-                void set_cam_width(float width);
+                void set_cam_near  (float near  );
+                void set_cam_width (float width );
                 void set_cam_height(float height);
 
                 void set_cam_pos(math::R3::vec<float>  v);
                 void set_cam_pos(math::R3::vec<float>* v);
-                void set_cam_pos_index(uint32_t i, float x);
-
                 void set_cam_ang(math::R3::vec<float>  v);
                 void set_cam_ang(math::R3::vec<float>* v);
-                void set_cam_ang_index(uint32_t i, float x);
-
                 void set_mod_pos(math::R3::vec<float>  v);
                 void set_mod_pos(math::R3::vec<float>* v);
-                void set_mod_pos_index(uint32_t i, float x);
 
                 void set_mod_mat(math::R3::mat<float>  m);
                 void set_mod_mat(math::R3::mat<float>* m);
-                void set_mod_mat_index(uint32_t i, uint32_t j, float a_ij);
 
                 
-                float get_cam_near();
-                float get_cam_width();
+                float get_cam_near  ();
+                float get_cam_width ();
                 float get_cam_height();
 
                 math::R3::vec<float> get_cam_pos();
@@ -48,13 +42,14 @@ namespace sh_vogl {
             };
             void init();
 
-            void set_var(uint32_t ox, uint32_t oy, uint32_t oz, void* data);
-            template<typename vox_type, uint32_t _ox, uint32_t _oy, uint32_t _oz> void set_var(var<vox_type, _ox, _oy, _oz> *v) { set_var(_ox, _oy, _oz, v->vox_ids); }
+            void set_var(math::R3::vec<uint32_t> var_size, void* data);
+            template<typename vox_type, uint32_t var_size_x, uint32_t var_size_y, uint32_t var_size_z> 
+            void set_var(var<vox_type, var_size_x, var_size_y, var_size_z> *v) { set_var(math::R3::vec<uint32_t>(var_size_x, var_size_y, var_size_z), v->vox_ids); }
 
-            void set_subvar(uint32_t x, uint32_t y, uint32_t z, uint32_t ox, uint32_t oy, uint32_t oz, void* data);
-            template<typename vox_type, const uint32_t _ox, const uint32_t _oy, const uint32_t _oz> void set_subvar(uint32_t x, uint32_t y, uint32_t z, var<vox_type, _ox, _oy, _oz> *v) { set_subvar(x, y, z, _ox, _oy, _oz, v->vox_ids); }
+            void set_subvar(math::R3::vec<uint32_t> v, math::R3::vec<uint32_t> subvar_size, void* data);
+            template<typename vox_type, uint32_t subvar_size_x, uint32_t subvar_size_y, uint32_t subvar_size_z> 
+            void set_subvar(math::R3::vec<uint32_t> V, var<vox_type, subvar_size_x, subvar_size_y, subvar_size_z> *v) { set_subvar(V, math::R3::vec<uint32_t>(subvar_size_x, subvar_size_y, subvar_size_z), v->vox_ids); }
             
-            void set_vox(uint32_t x, uint32_t y, uint32_t z, void* data);
             void set_vox(math::R3::vec<uint32_t> v, void* data);
 
             void draw();

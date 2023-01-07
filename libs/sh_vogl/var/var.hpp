@@ -2,50 +2,48 @@
 #define _VAR_HPP_
 
 #include <cinttypes>
-#include <cmath>
-#include <cstdlib>
+#include "../math/vec3.hpp"
 
 namespace sh_vogl {
-    namespace var {
-        
-        template<typename vox_type, uint32_t _ox, uint32_t _oy, uint32_t _oz>
+    namespace var {        
+        template<typename vox_type, uint32_t vox_size_x, uint32_t vox_size_y, uint32_t vox_size_z>
         class var {
         public:
             vox_type* vox_ids;
             var() {
-                vox_ids = (vox_type*) malloc(_ox*_oy*_oz*sizeof(vox_type));
-                memset(vox_ids, 0, (_ox*_oy*_oz*sizeof(vox_type))>>3);
+                vox_ids = (vox_type*) malloc(vox_size_x*vox_size_y*vox_size_z*sizeof(vox_type));
+                memset(vox_ids, 0, (vox_size_x*vox_size_y*vox_size_z*sizeof(vox_type))>>3);
             }
             ~var() {
                 finit();
             }
-            uint32_t ox() const { return _ox; }
-            uint32_t oy() const { return _oy; }
-            uint32_t oz() const { return _oz; }
+            uint32_t ox() const { return vox_size_x; }
+            uint32_t oy() const { return vox_size_y; }
+            uint32_t oz() const { return vox_size_z; }
             vox_type& operator()(const uint32_t& x, const uint32_t& y, const uint32_t& z) {
-                return vox_ids[z + _oz*(y + _oy*x)];
+                return vox_ids[x + vox_size_x*(y + vox_size_y*z)];
             }
             vox_type get(const uint32_t& x, const uint32_t& y, const uint32_t& z) const {
-                return vox_ids[z + _oz*(y + _oy*x)];
+                return vox_ids[x + vox_size_x*(y + vox_size_y*z)];
             }
         private:
             vox_type* __get(const uint32_t& x, const uint32_t& y, const uint32_t& z) const {
-                return vox_ids + (z + _oz*(y + _oy*x));
+                return vox_ids + (x + vox_size_x*(y + vox_size_y*z));
             }
-            #define __max__(a, b) (((a)>(b))?(a):(b))
+            #define _t_max__(a, b) (((a)>(b))?(a):(b))
             float par_intersect(float rox, float roy, float roz, float inv_rdx, float inv_rdy, float inv_rdz, float x, float y, float z) {
                 rox = inv_rdx * ((inv_rdx < 0) * x - rox);
                 roy = inv_rdy * ((inv_rdy < 0) * y - roy);
                 roz = inv_rdz * ((inv_rdz < 0) * z - roz);
-                return __max__(__max__(rox, roy), __max__(roz, 0));
+                return _t_max__(_t_max__(rox, roy), _t_max__(roz, 0));
             }
             float cube_intersect(float rox, float roy, float roz, float inv_rdx, float inv_rdy, float inv_rdz) {
                 rox = inv_rdx * ((inv_rdx < 0) - rox);
                 roy = inv_rdy * ((inv_rdy < 0) - roy);
                 roz = inv_rdz * ((inv_rdz < 0) - roz);
-                return __max__(__max__(rox, roy), __max__(roz, 0));
+                return _t_max__(_t_max__(rox, roy), _t_max__(roz, 0));
             }
-            #undef __max__
+            #undef _t_max__
             bool ppp(float v, float w) {return v <= 0 && w <= 0;}
         public:
         
@@ -58,6 +56,8 @@ namespace sh_vogl {
                 float ro_0x = *rox;
                 float ro_0y = *roy;
                 float ro_0z = *roz;
+
+                if (rdx == 0 || rdy == 0 || rdz == 0) return false;
 
                 float inv_rdx = 1.0f / rdx;
                 float inv_rdy = 1.0f / rdy;
@@ -72,6 +72,7 @@ namespace sh_vogl {
                 if (*rox < 0 || *rox >= sx || *roy < 0 || *roy >= sy || *roz < 0 || *roz >= sz)
                     return false;
 
+                
                 uint32_t vox_posx = *rox;
                 uint32_t vox_posy = *roy;
                 uint32_t vox_posz = *roz;
@@ -82,10 +83,11 @@ namespace sh_vogl {
                 float tmaxy = inv_rdy*((1 - stepy) * 0.5f + vox_posy - *roy);
                 float tmaxz = inv_rdz*((1 - stepz) * 0.5f + vox_posz - *roz);
 
-                while (true) {
+                
+                while(true) {
                     v = __get(vox_posx + x0, vox_posy + y0, vox_posz + z0);
 
-                    if (v != 0) {
+                    if (*v != 0) {
                         *l = cube_intersect(ro_0x - vox_posx, ro_0y - vox_posy, ro_0z - vox_posz, inv_rdx, inv_rdy, inv_rdz);
                         *rox = vox_posx;
                         *roy = vox_posy;
@@ -94,7 +96,7 @@ namespace sh_vogl {
                     }
 
                     *normx = stepx * ppp(tmaxx - tmaxy, tmaxx - tmaxz);
-                    *normy = stepy* ppp(tmaxy - tmaxz, tmaxy - tmaxx);
+                    *normy = stepy * ppp(tmaxy - tmaxz, tmaxy - tmaxx);
                     *normz = stepz * ppp(tmaxz - tmaxx, tmaxz - tmaxy);
                     vox_posx -= (*normx);
                     vox_posy -= (*normy);

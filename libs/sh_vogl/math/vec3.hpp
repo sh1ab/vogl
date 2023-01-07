@@ -18,7 +18,7 @@ namespace sh_vogl {
 				template <typename O> inline vec3<T> operator=(const vec3<O>& o) { x = (T)(o.x); y = (T)(o.y); z = (T)(o.z); return *this; }
 				//c
 				inline T abs2() const { return x * x + y * y + z * z; }
-				inline T abs() const { return (T)sqrt(abs2())); }
+				inline T abs() const { return (T)sqrt(abs2()); }
 				template <typename O> inline T dot(vec3<O>& o) const { return x * o.x + y * o.y + z * o.z; }
 				//logical
 				inline uint32_t operator()() const { return x || y || z; }

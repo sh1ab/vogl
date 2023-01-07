@@ -10,7 +10,9 @@
 #include <chrono>
 #include <string>
 #include <cmath>
-#include <thread>
+#include <math/vec3.hpp>
+#include <math/R3_actions.hpp>
+#include <math/mat3.hpp>
 
 sh_ogl::gl wgl;
 
@@ -31,38 +33,65 @@ void do_with_errors(HWND p, uint32_t error) {
     }
 }
 
-sh_vogl::var::var<uint32_t, 1024, 512, 1024> v;
-float ang[3];
-float pos[3];
+sh_vogl::var::var<uint32_t, 512, 512, 512> main_var;
+sh_vogl::math::R3::vec<float> ang;
+sh_vogl::math::R3::vec<float> pos;
+sh_vogl::math::R3::mat<float> mod_mat(1);
 float pos_speed = 80;
 float mouse_speed = 1;
 
+void edit_block(sh_vogl::math::R3::vec<float> mod_pos, sh_vogl::math::R3::vec<uint32_t> v, sh_vogl::math::R3::vec<uint32_t> subvar_size) {
+    sh_vogl::math::R3::mat<float> inv_mat = mod_mat.invert();
+    sh_vogl::math::R3::vec<float> rd(0,0,1);
+    rd = inv_mat * sh_vogl::math::R3::rot_xy(-ang.z) * (sh_vogl::math::R3::rot_zx(ang.y) * (sh_vogl::math::R3::rot_yz(ang.x) * rd));
+
+    float inv_l = rd.abs();
+    if (inv_l < 0.0001f) {
+        std::cout << "\nno, sheet\n";
+        return;
+    }
+
+    inv_l = 1.0f / inv_l;
+    rd = rd * inv_l;
+
+    sh_vogl::math::R3::vec<float> ro = pos - mod_pos;
+    ro = inv_mat * ro;
+
+    uint32_t vox;
+    float l;
+    sh_vogl::math::R3::vec<float> norm;
+
+    if (!main_var.cast_ray(&vox, &l, &(norm.x), &(norm.y), &(norm.z), &(ro.x), &(ro.y), &(ro.z), rd.x, rd.y, rd.z, v.x, v.y, v.z, subvar_size.x, subvar_size.y, subvar_size.z)) {
+        std::cout << "\nno, bool\n";
+        return;
+    }
+    
+    main_var(ro.x, ro.y, ro.z) = 0xFF000000 | (0x00FF0000&((rand()+200)*0x10000));
+
+    sh_vogl::var::big_var::set_vox(ro, &main_var(ro.x, ro.y, ro.z));
+}
+
 struct gm : public sh_game::game {
     uint32_t init() {
-        for(uint32_t i(v.ox());i--;)
-            for(uint32_t k(v.oz());k--;)
-                for(uint32_t j(v.oy()*0.5f*(1+sin(0.01f*i + sin(0.01f*k))));j--;)
-                    v(i, j, k) = (rand() & 0x00FFFFFF) + 0xFF000000;
+        for(uint32_t i(main_var.ox());i--;)
+            for(uint32_t k(main_var.oz());k--;)
+                for(uint32_t j(main_var.oy()*0.5f*(1+sin(0.01f*i + sin(0.01f*k))));j--;)
+                    main_var(i, j, k) = (rand() & 0x00FFFFFF) + 0xFF000000;
 
         sh_vogl::var::big_var::init();
-        sh_vogl::var::big_var::set_var(&v);
+        sh_vogl::var::big_var::set_var(&main_var);
 
-        sh_vogl::var::big_var::ubo::set_mod_mat_index(0, 0, 1);sh_vogl::var::big_var::ubo::set_mod_mat_index(0, 1, 0);sh_vogl::var::big_var::ubo::set_mod_mat_index(0, 2, 0);
-        sh_vogl::var::big_var::ubo::set_mod_mat_index(1, 0, 0);sh_vogl::var::big_var::ubo::set_mod_mat_index(1, 1, 1);sh_vogl::var::big_var::ubo::set_mod_mat_index(1, 2, 0);
-        sh_vogl::var::big_var::ubo::set_mod_mat_index(2, 0, 0);sh_vogl::var::big_var::ubo::set_mod_mat_index(2, 1, 0);sh_vogl::var::big_var::ubo::set_mod_mat_index(2, 2, 1);
+        sh_vogl::var::big_var::ubo::set_mod_mat(mod_mat);
         
         sh_vogl::var::big_var::ubo::set_cam_near(0.1f);
         sh_vogl::var::big_var::ubo::set_cam_width(screen_w);
         sh_vogl::var::big_var::ubo::set_cam_height(screen_h);
 
-        pos[0] = 0; pos[1] = 0; pos[2] = 0;
-        ang[0] = 0; ang[1] = 0; ang[2] = 0;
-
         sh_vogl::var::big_var::ubo::load();
 
         return sh_game::G::OK;
     }
-    float dt = 0;
+    float dt = 0.001f;
     uint32_t loop(float dt) {
         if(shks::get_key(VK_MENU).held)SetCursor(LoadCursor(NULL, IDC_ARROW));
         else SetCursor(NULL);
@@ -70,41 +99,33 @@ struct gm : public sh_game::game {
         if (shks::get_key(VK_ESCAPE).pressed)
             return sh_game::G::NICE_END;
 
-        float v[3] = {0, 0, 0};
-        v[2] = shks::get_key('W').held - shks::get_key('S').held;
-        v[0] = shks::get_key('D').held - shks::get_key('A').held;
-        float l = v[0]*v[0] + v[2]*v[2];
+        sh_vogl::math::R3::vec<float> v;
+        v.x = shks::get_key('D').held - shks::get_key('A').held;
+        v.z = shks::get_key('W').held - shks::get_key('S').held;
+        float l = v.x*v.x + v.z*v.z;
         if (l != 0) {
             l = 1.0f/sqrt(l);
-            v[0] *= l;
-            v[2] *= l;
-            l = v[0]*cos(ang[1]) - v[2]*sin(ang[1]);
-            v[2] = v[2]*cos(ang[1]) + v[0]*sin(ang[1]);
-            v[0] = l;
+            v.x *= l;
+            v.z *= l;
+            v = sh_vogl::math::R3::rot_zx(ang.y)*v;
         }
-        v[1] = shks::get_key(VK_SPACE).held - shks::get_key(VK_SHIFT).held;
-        pos[0] += v[0]*dt*pos_speed;
-        pos[1] += v[1]*dt*pos_speed;
-        pos[2] += v[2]*dt*pos_speed;
+        v.y = shks::get_key(VK_SPACE).held - shks::get_key(VK_SHIFT).held;
+        pos += v*pos_speed*dt;
         
         return sh_game::G::OK;
     }
-    float a[3] = {0, 0, 0};
+    sh_vogl::math::R3::vec<float> a;
     uint32_t touch_move(int32_t to_x, int32_t to_y, int32_t from_x, int32_t from_y) {
-        a[1] += (from_x - to_x) * dt;
-        a[0] += (from_y - to_y) * dt;
-        ang[0] += a[0]*mouse_speed;
-        ang[1] += a[1]*mouse_speed;
-        ang[2] += a[2]*mouse_speed;
-        a[0]*=0.6f - dt;
-        a[1]*=0.6f - dt;
-        a[2]*=0.6f - dt;
-        if (ang[0] < -1.570796f) ang[0] = -1.570796f;
-        if (ang[0] >  1.570796f) ang[0] =  1.570796f;
-        if (ang[1] < 0) ang[1] += 6.283185f;
-        if (ang[1] > 6.283185f) ang[1] -= 6.283185f;
-        if (ang[2] < 0) ang[1] += 6.283185f;
-        if (ang[2] > 6.283185f) ang[1] -= 6.283185f;
+        a.y += (from_x - to_x) * dt;
+        a.x += (from_y - to_y) * dt;
+        ang += a*mouse_speed;
+        a *= 0.9f - dt;
+        if (ang.x < -1.570796f) ang.x = -1.570796f;
+        if (ang.x >  1.570796f) ang.x =  1.570796f;
+        if (ang.y < 0)         ang.y += 6.283185f;
+        if (ang.y > 6.283185f) ang.y -= 6.283185f;
+        if (ang.z < 0)         ang.z += 6.283185f;
+        if (ang.z > 6.283185f) ang.z -= 6.283185f;
 
         return sh_game::G::OK;
     }
@@ -120,35 +141,19 @@ struct gm : public sh_game::game {
     uint32_t draw() {
         wgl.start_draw();
         glClearColor(0.01f, 0.01f, 0.01f, 1);
-        sh_vogl::var::big_var::ubo::set_cam_pos(pos[0], pos[1], pos[2]);
-        sh_vogl::var::big_var::ubo::set_cam_ang(ang[0], ang[1], ang[2]);
+        sh_vogl::var::big_var::ubo::set_cam_pos(pos);
+        sh_vogl::var::big_var::ubo::set_cam_ang(ang);
 
-        sh_vogl::var::big_var::ubo::set_mod_pos(0, 0, 0);
-        sh_vogl::var::big_var::ubo::set_tex(0, 0, 0);
-        sh_vogl::var::big_var::ubo::set_tex_size(32, 32, 32);
+
+        if(shks::get_key('G').held)
+            edit_block(sh_vogl::math::R3::vec<float>(0,0,0), sh_vogl::math::R3::vec<float>(0,0,0), sh_vogl::math::R3::vec<float>(512,512,512));
+
+        sh_vogl::var::big_var::ubo::set_mod_pos(sh_vogl::math::R3::vec<float>(0, 0, 0));
+        sh_vogl::var::big_var::ubo::set_tex(sh_vogl::math::R3::vec<uint32_t>(0, 0, 0));
+        sh_vogl::var::big_var::ubo::set_tex_size(sh_vogl::math::R3::vec<uint32_t>(512, 512, 512));
         sh_vogl::var::big_var::ubo::load();
         sh_vogl::var::big_var::draw();
-static float t = 0;
-t += dt;
-        sh_vogl::var::big_var::ubo::set_mod_pos(0, 64 + 32*sin(t), 0);
-        sh_vogl::var::big_var::ubo::set_tex(0, 32, 0);
-        sh_vogl::var::big_var::ubo::set_tex_size(32, 32, 32);
-        sh_vogl::var::big_var::ubo::load();
-        sh_vogl::var::big_var::draw();
-
-        sh_vogl::var::big_var::ubo::set_mod_pos(0, 32*cos(t) - 64, 0);
-        sh_vogl::var::big_var::ubo::set_tex(0, 67, 0);
-        sh_vogl::var::big_var::ubo::set_tex_size(32, 32, 32);
-        sh_vogl::var::big_var::ubo::load();
-        sh_vogl::var::big_var::draw();
-
-        for(uint32_t i(2);i--;)
-        for(uint32_t j(2);j--;)
-        for(uint32_t k(2);k--;){
-        uint32_t ggg[] = {(rand() & 0x00FFFFFF) + 0xFF000000};
-        sh_vogl::var::big_var::set_vox(i, j, k, ggg);
-        }
-
+        
         wgl.end_draw();
         return sh_game::G::OK;
     }

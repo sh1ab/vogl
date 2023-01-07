@@ -62,6 +62,30 @@ vec2 rot(in vec2 inp, in float alpha) {
 	);
 }
 
+mat3 rot_xy(in float alpha) {
+    return mat3(
+		cos(alpha), sin(alpha), 0,
+		-sin(alpha),  cos(alpha), 0,
+		0         ,  0         , 1   
+	);
+}
+
+mat3 rot_yz(in float alpha) {
+    return mat3(
+        1, 0, 0,
+		0, cos(alpha), sin(alpha), 
+		0, -sin(alpha), cos(alpha)
+	);
+}
+
+mat3 rot_zx(in float alpha) {
+    return mat3(
+		 cos(alpha), 0, -sin(alpha), 
+         0, 1, 0,
+	    sin(alpha),0,cos(alpha)
+	);
+}
+
 struct ray_hit {
     ivec3 norm;
     vec4 col;
@@ -125,9 +149,7 @@ void main() {
 
 	vec3 rd = normalize(vec3(2*gl_FragCoord.xy-vec2(w, h), h));
 
-	rd.yz = rot(rd.yz, -ang_x);
-	rd.zx = rot(rd.zx, -ang_y);
-	rd.xy = rot(rd.xy, -ang_z);
+    rd = rot_xy(-ang_z)*rot_zx(-ang_y)*rot_yz(-ang_x)*rd;
 
     rd = inv_mod_mat * rd;
 
@@ -135,7 +157,6 @@ void main() {
     if (inv_l < 0.0001) {
         gl_FragDepth = 0.1f; 
         frag_color = vec4(1, 1, 1, 1);
-        return;
 		discard;
     }
     inv_l = 1.0 / inv_l;
