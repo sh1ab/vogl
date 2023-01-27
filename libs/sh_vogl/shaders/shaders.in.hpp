@@ -4,6 +4,9 @@
 const char* big_var_vert_text = R"(
     ${big_var_vert_shader_text}
     )";
+const char* big_var_geom_text = R"(
+    ${big_var_geom_shader_text}
+    )";
 const char* big_var_frag_text = R"(
     ${big_var_frag_shader_text}
     )";

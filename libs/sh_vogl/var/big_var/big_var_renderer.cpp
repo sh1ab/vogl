@@ -2,6 +2,7 @@
 #include <ppl_shad.hpp>
 #include <ogl.hpp>
 #include <ubo.hpp>
+#include <vector>
 #include "shaders/shaders.hpp"
 #include "../../math/vec3.hpp"
 
@@ -63,18 +64,48 @@ namespace sh_vogl {
             sh_ogl::ppl_prog pr;
             uint32_t texture;
 
-            void init() {
+            //var_obj::var_obj(math::R3::vec<float> tex, math::R3::vec<float> tex_size, math::R3::vec<float> pos, math::R3::mat<float> mmat) {
+            //    this->tex = tex;
+            //    this->tex_size = tex_size;
+            //    this->pos = pos;
+            //    this->mmat = mmat;
+            //}
+            //
+            //uint32_t VBO, VAO;
+            //
+            //void set_var_objects(var_obj* objects, size_t offset, size_t amount) {
+            //    glGenVertexArrays(1, &VAO);
+            //    glGenBuffers(1, &VBO);
+            //    glBindVertexArray(VAO);
+            //
+            //    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            //    glBufferData(GL_ARRAY_BUFFER, amount*sizeof(var_obj), objects+offset, GL_STATIC_DRAW);
+            //    
+            //    glEnableVertexAttribArray(0);
+            //    glEnableVertexAttribArray(1);
+            //    glEnableVertexAttribArray(2);
+            //    glEnableVertexAttribArray(3);
+            //
+            //    glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(var_obj), (void*)(0*sizeof(float)));
+            //    glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(var_obj), (void*)(3*sizeof(float)));
+            //    glVertexAttribPointer(2, 3, GL_FLOAT, false, sizeof(var_obj), (void*)(6*sizeof(float)));
+            //    glVertexAttribPointer(3, 9, GL_FLOAT, false, sizeof(var_obj), (void*)(9*sizeof(float)));
+            //  
+            //    glBindBuffer(GL_ARRAY_BUFFER, 0);
+            //    glBindVertexArray(0); 
+            //}
 
+            void init() {
                 glEnable(GL_DEPTH_TEST);
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glEnable(GL_CULL_FACE);
 
-                pr.gen(2);
+                pr.gen(3);
                 pr.create(GL_VERTEX_SHADER, GL_VERTEX_SHADER_BIT, big_var_vert_text, 0);
-                pr.create(GL_FRAGMENT_SHADER, GL_FRAGMENT_SHADER_BIT, big_var_frag_text, 1);
+                pr.create(GL_GEOMETRY_SHADER, GL_GEOMETRY_SHADER_BIT, big_var_geom_text, 1);
+                pr.create(GL_FRAGMENT_SHADER, GL_FRAGMENT_SHADER_BIT, big_var_frag_text, 2);
                 pr.bind();
-
 
                 glGenTextures(1, &texture);
                 glBindTexture(GL_TEXTURE_3D, texture);
@@ -105,7 +136,9 @@ namespace sh_vogl {
             }
             void draw() {
                 pr.bind();
-                glDrawArrays(GL_TRIANGLES, 0, 36);
+                //glBindVertexArray(VAO);
+                glDrawArrays(GL_POINTS, 0, 1);
+                //glBindVertexArray(0);
                 pr.unbind();
             }
             void stop() {

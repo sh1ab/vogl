@@ -4,6 +4,7 @@ project(sh_vogl_lib VERSION 1.0.0)
 
 file(READ "shaders/big_var.vert.glsl" big_var_vert_shader_text)
 file(READ "shaders/big_var.frag.glsl" big_var_frag_shader_text)
+file(READ "shaders/big_var.geom.glsl" big_var_geom_shader_text)
 
 configure_file("shaders/shaders.in.hpp" "shaders/shaders.hpp")
 

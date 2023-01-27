@@ -40,6 +40,17 @@ namespace sh_vogl {
                 math::R3::vec<float> get_mod_pos();
                 math::R3::mat<float> get_mod_mat();
             };
+            
+            //typedef struct var_obj {
+            //    math::R3::vec<float> tex;
+            //    math::R3::vec<float> tex_size;
+            //    math::R3::vec<float> pos;
+            //    math::R3::mat<float> mmat;
+            //    var_obj(math::R3::vec<float> tex = math::R3::vec<float>(0, 0, 0), math::R3::vec<float> tex_size = math::R3::vec<float>(0, 0, 0), math::R3::vec<float> mod_pos = math::R3::vec<float>(0, 0, 0), math::R3::mat<float> mod_mat = math::R3::mat<float>(1));
+            //}var_obj;
+            //
+            //void set_var_objects(var_obj* objects, size_t offset, size_t amount);
+
             void init();
 
             void set_var(math::R3::vec<uint32_t> var_size, void* data);

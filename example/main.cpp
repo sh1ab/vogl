@@ -76,7 +76,7 @@ struct gm : public sh_game::game {
         for(uint32_t i(main_var.ox());i--;)
             for(uint32_t k(main_var.oz());k--;)
                 for(uint32_t j(main_var.oy()*0.5f*(1+sin(0.01f*i + sin(0.01f*k))));j--;)
-                    main_var(i, j, k) = (rand() & 0x00FFFFFF) + 0xFF000000;
+                    main_var(i, j, k) = (rand() & 0x00FFFFFF) | 0xFF000000;
 
         sh_vogl::var::big_var::init();
         sh_vogl::var::big_var::set_var(&main_var);
@@ -86,6 +86,22 @@ struct gm : public sh_game::game {
         sh_vogl::var::big_var::ubo::set_cam_near(0.1f);
         sh_vogl::var::big_var::ubo::set_cam_width(screen_w);
         sh_vogl::var::big_var::ubo::set_cam_height(screen_h);
+
+        //sh_vogl::var::big_var::var_obj* kk = new sh_vogl::var::big_var::var_obj[2];
+        //
+        //kk[0].mmat = sh_vogl::math::R3::mat<float>(1);
+        //kk[0].pos = sh_vogl::math::R3::vec<float>(0, 0, 0);
+        //kk[0].tex = sh_vogl::math::R3::vec<float>(0, 0, 0);
+        //kk[0].tex_size = sh_vogl::math::R3::vec<float>(512, 512, 512);
+        //
+        //kk[1].mmat = sh_vogl::math::R3::mat<float>(1);
+        //kk[1].pos = sh_vogl::math::R3::vec<float>(0, 0, 0);
+        //kk[1].tex = sh_vogl::math::R3::vec<float>(0, 0, 0);
+        //kk[1].tex_size = sh_vogl::math::R3::vec<float>(256, 256, 256);
+        //
+        //sh_vogl::var::big_var::set_var_objects(kk, 0, 1);
+
+        pos = sh_vogl::math::R3::vec<float>(0, 1, 0);
 
         sh_vogl::var::big_var::ubo::load();
 
