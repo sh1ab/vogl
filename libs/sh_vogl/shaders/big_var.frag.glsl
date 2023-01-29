@@ -1,17 +1,31 @@
 #version 440 core
 
+layout(std140, binding = 3) uniform inputs{
+	uint atlas_size_x;
+	uint atlas_size_y;
+	uint atlas_size_z;
+
+	float n;
+	float w;
+	float h;
+
+	float pos_x;
+	float pos_y;
+	float pos_z;
+
+	float ang_x;
+	float ang_y;
+	float ang_z;
+};
+
 out vec4 frag_color;
 uniform sampler3D vox_tex;
 
 in VS_OUT {
-	vec3 atlas_size;
 	vec3 tex;
 	vec3 tex_size;
-	vec3 nwh;
-	vec3 pos;
-    vec3 ang;
 	vec3 mod_pos;
-	mat3 mod_mat;
+	vec4 mod_pol;
 } fs_in;
 
 float par_intersect(in vec3 neg_ro, in vec3 inv_rd, in vec3 v) {
@@ -21,13 +35,6 @@ float par_intersect(in vec3 neg_ro, in vec3 inv_rd, in vec3 v) {
 float cube_intersect(in vec3 neg_ro, in vec3 inv_rd) {
     neg_ro = inv_rd * (neg_ro + vec3(inv_rd.x < 0, inv_rd.y < 0, inv_rd.z < 0));
     return max(max(neg_ro.x, neg_ro.y), max(neg_ro.z, 0));
-}
-
-vec2 rot(in vec2 inp, in float alpha) {
-    return vec2(
-		inp.x*cos(alpha) - inp.y*sin(alpha), 
-		inp.x*sin(alpha) + inp.y*cos(alpha)
-	);
 }
 
 mat3 rot_xy(in float alpha) {
@@ -62,7 +69,7 @@ struct ray_hit {
 
 ivec3 ppp(vec3 v, vec3 w) { return ivec3(v.x <= 0 && w.x <= 0, v.y <= 0 && w.y <= 0, v.z <= 0 && w.z <= 0); }
 
-#define voxel(__x, __y, __z) texture(vox_tex, vec3((fs_in.tex.x + (__x))/float(fs_in.atlas_size.x), (fs_in.tex.y + (__y))/float(fs_in.atlas_size.y), (fs_in.tex.z + (__z))/float(fs_in.atlas_size.z)))
+#define voxel(__x, __y, __z) texture(vox_tex, vec3((fs_in.tex.x + (__x))/float(atlas_size_x), (fs_in.tex.y + (__y))/float(atlas_size_y), (fs_in.tex.z + (__z))/float(atlas_size_z)))
 bool cast_ray(in vec3 ro, in vec3 rd, out ray_hit hit) {
     vec3 ro_0 = ro;
 
@@ -107,25 +114,17 @@ bool cast_ray(in vec3 ro, in vec3 rd, out ray_hit hit) {
 #undef voxel
 
 void main() {
-    mat3 inv_mod_mat = inverse(fs_in.mod_mat);
+    mat3 inv_mod_mat = rot_xy(-fs_in.mod_pol.z) * rot_zx(-fs_in.mod_pol.y) * rot_yz(-fs_in.mod_pol.x);
 
-	vec3 rd = normalize(vec3(2*gl_FragCoord.xy-fs_in.nwh.yz, fs_in.nwh.z));
+	vec3 rd = normalize(vec3(2*gl_FragCoord.xy-vec2(w, h), h));
 
-    rd = rot_xy(-fs_in.ang.z)*rot_zx(-fs_in.ang.y)*rot_yz(-fs_in.ang.x)*rd;
+    rd = rot_xy(-ang_z)*rot_zx(-ang_y)*rot_yz(-ang_x)*rd;
 
     rd = inv_mod_mat * rd;
 
-    float inv_l = length(rd);
-    if (inv_l < 0.0001) {
-        gl_FragDepth = 0.1f; 
-        frag_color = vec4(1, 1, 1, 1);
-		discard;
-    }
-    inv_l = 1.0 / inv_l;
-    rd = rd*inv_l;
-
-    vec3 ro = fs_in.pos - fs_in.mod_pos;
+    vec3 ro = vec3(pos_x, pos_y, pos_z) - fs_in.mod_pos;
     ro = inv_mod_mat * ro;
+    ro *= 1.0 / fs_in.mod_pol.w;
 
     ray_hit hit;
 
@@ -133,8 +132,7 @@ void main() {
 
     if (!intersect || hit.col.a < 0.0001)
     	discard;
-
-    hit.l *= inv_l;
-    gl_FragDepth = (hit.l - fs_in.nwh.x) / hit.l;
+        
+    gl_FragDepth = (hit.l - n) / hit.l;
     frag_color = hit.col;
 }

@@ -12,8 +12,6 @@ namespace sh_vogl {
             namespace ubo {
                 struct __ubo_struct {
                     math::R3::vec<uint32_t> atlas_size;
-                    math::R3::vec<uint32_t> tex;
-                    math::R3::vec<uint32_t> tex_size;
                     
                     float n;
                     float w;
@@ -21,8 +19,6 @@ namespace sh_vogl {
 
                     math::R3::vec<float> cam_pos;
                     math::R3::vec<float> cam_ang;
-                    math::R3::vec<float> mod_pos;
-                    math::R3::mat<float> mod_mat;
                 };
                 sh_ogl::ubo<GL_DYNAMIC_DRAW, 3, struct __ubo_struct> ubo_buf;
 
@@ -32,11 +28,6 @@ namespace sh_vogl {
                 }
                 void load() { ubo_buf.load_ubo(); }
 
-                void set_tex(math::R3::vec<uint32_t>  v) { ubo_buf.buf.tex =  v; }
-                void set_tex(math::R3::vec<uint32_t>* v) { ubo_buf.buf.tex = *v; }
-                void set_tex_size(math::R3::vec<uint32_t>  v) { ubo_buf.buf.tex_size =  v; }
-                void set_tex_size(math::R3::vec<uint32_t>* v) { ubo_buf.buf.tex_size = *v; }
-
                 void set_cam_near  (float near  ) { ubo_buf.buf.n = near  ; }
                 void set_cam_width (float width ) { ubo_buf.buf.w = width ; }
                 void set_cam_height(float height) { ubo_buf.buf.h = height; }
@@ -45,11 +36,6 @@ namespace sh_vogl {
                 void set_cam_pos(math::R3::vec<float>* v) { ubo_buf.buf.cam_pos = *v; }
                 void set_cam_ang(math::R3::vec<float>  v) { ubo_buf.buf.cam_ang =  v; }
                 void set_cam_ang(math::R3::vec<float>* v) { ubo_buf.buf.cam_ang = *v; }
-                void set_mod_pos(math::R3::vec<float>  v) { ubo_buf.buf.mod_pos =  v; }
-                void set_mod_pos(math::R3::vec<float>* v) { ubo_buf.buf.mod_pos = *v; }
-
-                void set_mod_mat(math::R3::mat<float>  mat) { ubo_buf.buf.mod_mat =  mat; }
-                void set_mod_mat(math::R3::mat<float>* mat) { ubo_buf.buf.mod_mat = *mat; }
 
                 float get_cam_near  () { return ubo_buf.buf.n; }
                 float get_cam_width () { return ubo_buf.buf.w; }
@@ -57,43 +43,41 @@ namespace sh_vogl {
 
                 math::R3::vec<float> get_cam_pos() { return ubo_buf.buf.cam_pos; }
                 math::R3::vec<float> get_cam_ang() { return ubo_buf.buf.cam_ang; }
-                math::R3::vec<float> get_mod_pos() { return ubo_buf.buf.mod_pos; }
-
-                math::R3::mat<float> get_mod_mat() { return ubo_buf.buf.mod_mat; }
             };
             sh_ogl::ppl_prog pr;
             uint32_t texture;
 
-            //var_obj::var_obj(math::R3::vec<float> tex, math::R3::vec<float> tex_size, math::R3::vec<float> pos, math::R3::mat<float> mmat) {
-            //    this->tex = tex;
-            //    this->tex_size = tex_size;
-            //    this->pos = pos;
-            //    this->mmat = mmat;
-            //}
-            //
-            //uint32_t VBO, VAO;
-            //
-            //void set_var_objects(var_obj* objects, size_t offset, size_t amount) {
-            //    glGenVertexArrays(1, &VAO);
-            //    glGenBuffers(1, &VBO);
-            //    glBindVertexArray(VAO);
-            //
-            //    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-            //    glBufferData(GL_ARRAY_BUFFER, amount*sizeof(var_obj), objects+offset, GL_STATIC_DRAW);
-            //    
-            //    glEnableVertexAttribArray(0);
-            //    glEnableVertexAttribArray(1);
-            //    glEnableVertexAttribArray(2);
-            //    glEnableVertexAttribArray(3);
-            //
-            //    glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(var_obj), (void*)(0*sizeof(float)));
-            //    glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(var_obj), (void*)(3*sizeof(float)));
-            //    glVertexAttribPointer(2, 3, GL_FLOAT, false, sizeof(var_obj), (void*)(6*sizeof(float)));
-            //    glVertexAttribPointer(3, 9, GL_FLOAT, false, sizeof(var_obj), (void*)(9*sizeof(float)));
-            //  
-            //    glBindBuffer(GL_ARRAY_BUFFER, 0);
-            //    glBindVertexArray(0); 
-            //}
+            var_obj::var_obj(math::R3::vec<float> tex, math::R3::vec<float> tex_size, math::R3::vec<float> pos, math::R3::vec<float> ang, float size) {
+                this->tex = tex;
+                this->tex_size = tex_size;
+                this->pos = pos;
+                this->ang = ang;
+                this->size = size;
+            }
+            
+            uint32_t VBO, VAO;
+            
+            void set_var_objects(var_obj* objects, size_t offset, size_t amount) {
+                glGenVertexArrays(1, &VAO);
+                glGenBuffers(1, &VBO);
+                glBindVertexArray(VAO);
+            
+                glBindBuffer(GL_ARRAY_BUFFER, VBO);
+                glBufferData(GL_ARRAY_BUFFER, amount*sizeof(var_obj), objects+offset, GL_STATIC_DRAW);
+                
+                glEnableVertexAttribArray(0);
+                glEnableVertexAttribArray(1);
+                glEnableVertexAttribArray(2);
+                glEnableVertexAttribArray(3);
+            
+                glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(var_obj), (void*)(0*sizeof(float)));
+                glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(var_obj), (void*)(3*sizeof(float)));
+                glVertexAttribPointer(2, 3, GL_FLOAT, false, sizeof(var_obj), (void*)(6*sizeof(float)));
+                glVertexAttribPointer(3, 4, GL_FLOAT, false, sizeof(var_obj), (void*)(9*sizeof(float)));
+              
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                glBindVertexArray(0); 
+            }
 
             void init() {
                 glEnable(GL_DEPTH_TEST);
@@ -134,11 +118,11 @@ namespace sh_vogl {
                 glBindTexture(GL_TEXTURE_3D, texture);
                 glTexSubImage3D(GL_TEXTURE_3D, 0, v.x, v.y, v.z, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, data);
             }
-            void draw() {
+            void draw(uint32_t offset, uint32_t amount) {
                 pr.bind();
-                //glBindVertexArray(VAO);
-                glDrawArrays(GL_POINTS, 0, 1);
-                //glBindVertexArray(0);
+                glBindVertexArray(VAO);
+                glDrawArrays(GL_POINTS, offset, amount);
+                glBindVertexArray(0);
                 pr.unbind();
             }
             void stop() {

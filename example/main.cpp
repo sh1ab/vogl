@@ -33,29 +33,20 @@ void do_with_errors(HWND p, uint32_t error) {
     }
 }
 
-sh_vogl::var::var<uint32_t, 512, 512, 512> main_var;
+sh_vogl::var::var<uint32_t, 256, 256, 256> main_var;
 sh_vogl::math::R3::vec<float> ang;
 sh_vogl::math::R3::vec<float> pos;
-sh_vogl::math::R3::mat<float> mod_mat(1);
 float pos_speed = 80;
 float mouse_speed = 1;
 
-void edit_block(sh_vogl::math::R3::vec<float> mod_pos, sh_vogl::math::R3::vec<uint32_t> v, sh_vogl::math::R3::vec<uint32_t> subvar_size) {
-    sh_vogl::math::R3::mat<float> inv_mat = mod_mat.invert();
+void edit_block(sh_vogl::math::R3::vec<float> mod_pos, sh_vogl::math::R3::vec<uint32_t> v, sh_vogl::math::R3::vec<uint32_t> subvar_size, sh_vogl::math::R3::vec<float> subvar_ang, float subvar_size_) {
+    sh_vogl::math::R3::mat<float> inv_mod = sh_vogl::math::R3::rot_xy(-subvar_ang.z) * sh_vogl::math::R3::rot_zx(-subvar_ang.y) * sh_vogl::math::R3::rot_yz(-subvar_ang.x);
     sh_vogl::math::R3::vec<float> rd(0,0,1);
-    rd = inv_mat * sh_vogl::math::R3::rot_xy(-ang.z) * (sh_vogl::math::R3::rot_zx(ang.y) * (sh_vogl::math::R3::rot_yz(ang.x) * rd));
-
-    float inv_l = rd.abs();
-    if (inv_l < 0.0001f) {
-        std::cout << "\nno, sheet\n";
-        return;
-    }
-
-    inv_l = 1.0f / inv_l;
-    rd = rd * inv_l;
+    rd = inv_mod * sh_vogl::math::R3::rot_xy(-ang.z) * sh_vogl::math::R3::rot_zx(-ang.y) * sh_vogl::math::R3::rot_yz(-ang.x) * rd;
 
     sh_vogl::math::R3::vec<float> ro = pos - mod_pos;
-    ro = inv_mat * ro;
+    ro = inv_mod * ro;
+    ro *= (1.0f / subvar_size_);
 
     uint32_t vox;
     float l;
@@ -71,35 +62,45 @@ void edit_block(sh_vogl::math::R3::vec<float> mod_pos, sh_vogl::math::R3::vec<ui
     sh_vogl::var::big_var::set_vox(ro, &main_var(ro.x, ro.y, ro.z));
 }
 
+const uint32_t amount_var_obj = 3; 
+sh_vogl::var::big_var::var_obj kk[amount_var_obj];
+
 struct gm : public sh_game::game {
     uint32_t init() {
         for(uint32_t i(main_var.ox());i--;)
             for(uint32_t k(main_var.oz());k--;)
-                for(uint32_t j(main_var.oy()*0.5f*(1+sin(0.01f*i + sin(0.01f*k))));j--;)
+                for(uint32_t j(main_var.oy()*0.4f*(1+sin(0.01f*i + sin(0.01f*k))));j--;)
                     main_var(i, j, k) = (rand() & 0x00FFFFFF) | 0xFF000000;
 
         sh_vogl::var::big_var::init();
         sh_vogl::var::big_var::set_var(&main_var);
 
-        sh_vogl::var::big_var::ubo::set_mod_mat(mod_mat);
-        
         sh_vogl::var::big_var::ubo::set_cam_near(0.1f);
         sh_vogl::var::big_var::ubo::set_cam_width(screen_w);
         sh_vogl::var::big_var::ubo::set_cam_height(screen_h);
+        
+        kk[0].ang.x = 0.7f;
+        kk[0].ang.y = -0.7f;
+        kk[0].ang.z = -0.7f;
+        kk[0].tex_size = sh_vogl::math::R3::vec<float>(128, 32, 128);
+        
+        kk[1].pos.y = 10;
+        kk[1].pos.x = 10;
+        kk[1].pos.z = -10;
+        kk[1].ang.x = -0.7f;
+        kk[1].ang.y = 0.7f;
+        kk[1].ang.z = 0.7f;
+        kk[1].tex_size = sh_vogl::math::R3::vec<float>(256, 128, 256);
+        
+        kk[2].ang.x = 1.7f;
+        kk[2].ang.y = 0.7f;
+        kk[2].ang.z = 0.7f;
+        kk[2].pos.y = -10;
+        kk[2].pos.x = -256;
+        kk[2].pos.z = 10;
+        kk[2].tex_size = sh_vogl::math::R3::vec<float>(64, 256, 64);
 
-        //sh_vogl::var::big_var::var_obj* kk = new sh_vogl::var::big_var::var_obj[2];
-        //
-        //kk[0].mmat = sh_vogl::math::R3::mat<float>(1);
-        //kk[0].pos = sh_vogl::math::R3::vec<float>(0, 0, 0);
-        //kk[0].tex = sh_vogl::math::R3::vec<float>(0, 0, 0);
-        //kk[0].tex_size = sh_vogl::math::R3::vec<float>(512, 512, 512);
-        //
-        //kk[1].mmat = sh_vogl::math::R3::mat<float>(1);
-        //kk[1].pos = sh_vogl::math::R3::vec<float>(0, 0, 0);
-        //kk[1].tex = sh_vogl::math::R3::vec<float>(0, 0, 0);
-        //kk[1].tex_size = sh_vogl::math::R3::vec<float>(256, 256, 256);
-        //
-        //sh_vogl::var::big_var::set_var_objects(kk, 0, 1);
+        sh_vogl::var::big_var::set_var_objects(kk, 0, amount_var_obj);
 
         pos = sh_vogl::math::R3::vec<float>(0, 1, 0);
 
@@ -123,7 +124,7 @@ struct gm : public sh_game::game {
             l = 1.0f/sqrt(l);
             v.x *= l;
             v.z *= l;
-            v = sh_vogl::math::R3::rot_zx(ang.y)*v;
+            v = sh_vogl::math::R3::rot_zx(-ang.y)*v;
         }
         v.y = shks::get_key(VK_SPACE).held - shks::get_key(VK_SHIFT).held;
         pos += v*pos_speed*dt;
@@ -159,16 +160,14 @@ struct gm : public sh_game::game {
         glClearColor(0.01f, 0.01f, 0.01f, 1);
         sh_vogl::var::big_var::ubo::set_cam_pos(pos);
         sh_vogl::var::big_var::ubo::set_cam_ang(ang);
-
-
-        if(shks::get_key('G').held)
-            edit_block(sh_vogl::math::R3::vec<float>(0,0,0), sh_vogl::math::R3::vec<float>(0,0,0), sh_vogl::math::R3::vec<float>(512,512,512));
-
-        sh_vogl::var::big_var::ubo::set_mod_pos(sh_vogl::math::R3::vec<float>(0, 0, 0));
-        sh_vogl::var::big_var::ubo::set_tex(sh_vogl::math::R3::vec<uint32_t>(0, 0, 0));
-        sh_vogl::var::big_var::ubo::set_tex_size(sh_vogl::math::R3::vec<uint32_t>(512, 512, 512));
         sh_vogl::var::big_var::ubo::load();
-        sh_vogl::var::big_var::draw();
+
+        #define gg 1
+        if(shks::get_key('G').held)
+            edit_block(kk[gg].pos, kk[gg].tex, kk[gg].tex_size, kk[gg].ang, kk[gg].size);
+        #undef gg
+
+        sh_vogl::var::big_var::draw(0, amount_var_obj);
         
         wgl.end_draw();
         return sh_game::G::OK;

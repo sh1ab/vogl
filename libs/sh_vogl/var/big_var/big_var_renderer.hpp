@@ -11,11 +11,6 @@ namespace sh_vogl {
             namespace ubo {
                 void load();
 
-                void set_tex(math::R3::vec<uint32_t>  v);
-                void set_tex(math::R3::vec<uint32_t>* v);
-                void set_tex_size(math::R3::vec<uint32_t>  v);
-                void set_tex_size(math::R3::vec<uint32_t>* v);
-
                 void set_cam_near  (float near  );
                 void set_cam_width (float width );
                 void set_cam_height(float height);
@@ -24,12 +19,6 @@ namespace sh_vogl {
                 void set_cam_pos(math::R3::vec<float>* v);
                 void set_cam_ang(math::R3::vec<float>  v);
                 void set_cam_ang(math::R3::vec<float>* v);
-                void set_mod_pos(math::R3::vec<float>  v);
-                void set_mod_pos(math::R3::vec<float>* v);
-
-                void set_mod_mat(math::R3::mat<float>  m);
-                void set_mod_mat(math::R3::mat<float>* m);
-
                 
                 float get_cam_near  ();
                 float get_cam_width ();
@@ -37,19 +26,18 @@ namespace sh_vogl {
 
                 math::R3::vec<float> get_cam_pos();
                 math::R3::vec<float> get_cam_ang();
-                math::R3::vec<float> get_mod_pos();
-                math::R3::mat<float> get_mod_mat();
             };
             
-            //typedef struct var_obj {
-            //    math::R3::vec<float> tex;
-            //    math::R3::vec<float> tex_size;
-            //    math::R3::vec<float> pos;
-            //    math::R3::mat<float> mmat;
-            //    var_obj(math::R3::vec<float> tex = math::R3::vec<float>(0, 0, 0), math::R3::vec<float> tex_size = math::R3::vec<float>(0, 0, 0), math::R3::vec<float> mod_pos = math::R3::vec<float>(0, 0, 0), math::R3::mat<float> mod_mat = math::R3::mat<float>(1));
-            //}var_obj;
-            //
-            //void set_var_objects(var_obj* objects, size_t offset, size_t amount);
+            typedef struct var_obj {
+                math::R3::vec<float> tex;
+                math::R3::vec<float> tex_size;
+                math::R3::vec<float> pos;
+                math::R3::vec<float> ang;
+                float size;
+                var_obj(math::R3::vec<float> tex = math::R3::vec<float>(0, 0, 0), math::R3::vec<float> tex_size = math::R3::vec<float>(0, 0, 0), math::R3::vec<float> mod_pos = math::R3::vec<float>(0, 0, 0), math::R3::vec<float> mod_ang = math::R3::vec<float>(0, 0, 0), float mod_size = 1);
+            }var_obj;
+            
+            void set_var_objects(var_obj* objects, size_t offset, size_t amount);
 
             void init();
 
@@ -63,7 +51,7 @@ namespace sh_vogl {
             
             void set_vox(math::R3::vec<uint32_t> v, void* data);
 
-            void draw();
+            void draw(uint32_t offset, uint32_t amount);
             void stop();
         };
     };
