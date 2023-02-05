@@ -157,7 +157,6 @@ struct gm : public sh_game::game {
     }
     uint32_t draw() {
         wgl.start_draw();
-        glClearColor(0.01f, 0.01f, 0.01f, 1);
         sh_vogl::var::big_var::ubo::set_cam_pos(pos);
         sh_vogl::var::big_var::ubo::set_cam_ang(ang);
         sh_vogl::var::big_var::ubo::load();
